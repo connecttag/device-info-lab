@@ -10,8 +10,8 @@ function hydrate(row) {
 export class VisitRepository extends BaseRepository {
     async record({ id, linkId, now, retainUntil, edge }) {
         const result = await this.first(`INSERT INTO visits (id, linkId, createdAt, retainUntil, ip, country, browserName, osName, isBot, edgeJson, template)
-            SELECT ?, id, ?, ?, ?, ?, ?, ?, ?, ?, template FROM links WHERE id = ? AND isActive = 1 AND expiresAt > ? AND (maxUses IS NULL OR useCount < maxUses) RETURNING id`,
-        [id, now, retainUntil, edge.ip ?? null, edge.country ?? null, edge.browserName ?? null, edge.osName ?? null, Number(edge.isBot), JSON.stringify(edge), linkId, now]);
+            SELECT ?, id, ?, MIN(?, ? + COALESCE((SELECT retentionDays FROM siteSettings WHERE id = 1), 30) * 86400000), ?, ?, ?, ?, ?, ?, template FROM links WHERE id = ? AND isActive = 1 AND expiresAt > ? AND (maxUses IS NULL OR useCount < maxUses) RETURNING id`,
+        [id, now, retainUntil, now, edge.ip ?? null, edge.country ?? null, edge.browserName ?? null, edge.osName ?? null, Number(edge.isBot), JSON.stringify(edge), linkId, now]);
         return Boolean(result);
     }
     async enrich(id, linkId, browser, now) {

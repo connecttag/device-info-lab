@@ -1,6 +1,7 @@
 import { S } from './strings.js';
 import { api } from './api.js';
 import { el, button, number } from './ui.js';
+import { latestLoader } from './latest.js';
 export function initGroups({ onChanged, onError }) {
     const $ = selector => document.querySelector(selector); let groups = [], action;
     function render() {
@@ -16,7 +17,7 @@ export function initGroups({ onChanged, onError }) {
             actions.append(button(S.rename, () => openAction('rename', group)), button(S.purgeGroup, () => openAction('purge', group)), button(S.remove, () => openAction('remove', group), 'small-button danger-text')); row.append(copy, actions); return row;
         }));
     }
-    async function refresh() { groups = await api('/api/groups'); render(); return groups; }
+    const refresh = latestLoader(() => api('/api/groups'), data => { groups = data; render(); });
     function openAction(mode, item) {
         action = { mode, item }; $('#group-action-error').textContent = '';
         $('#group-action-title').textContent = { rename: S.rename, remove: S.remove, purge: S.purgeGroup, move: S.moveGroup }[mode];

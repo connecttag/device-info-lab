@@ -9,14 +9,22 @@ export class SettingsService {
     async update(body) {
         onlyKeys(body, ['brand', 'defaultTemplate', 'defaultExpiryHours', 'defaultMaxUses', 'timezone', 'retentionDays', 'theme']);
         if (!Object.keys(body).length) fail(400, 'BadRequest');
-        const data = { ...await this.get(), ...body };
-        if (typeof data.brand !== 'string' || !data.brand.trim() || data.brand.trim().length > 80) fail(400, 'BadRequest');
-        data.brand = data.brand.trim();
-        if (!CONFIG.templates.includes(data.defaultTemplate) || !Number.isInteger(data.defaultExpiryHours) || data.defaultExpiryHours < 1 || data.defaultExpiryHours > 2160 || !Number.isInteger(data.retentionDays) || data.retentionDays < 1 || data.retentionDays > 30 || !['system', 'light', 'dark'].includes(data.theme)) fail(400, 'BadRequest');
-        if (data.defaultMaxUses !== null && (!Number.isInteger(data.defaultMaxUses) || data.defaultMaxUses < 1 || data.defaultMaxUses > 1000000)) fail(400, 'BadRequest');
-        if (typeof data.timezone !== 'string' || data.timezone.length > 100) fail(400, 'BadRequest');
-        try { new Intl.DateTimeFormat('en', { timeZone: data.timezone }).format(); } catch { fail(400, 'BadRequest'); }
-        await this.settings.set(data);
-        return data;
+        const data = { ...body };
+        if ('brand' in data) {
+            if (typeof data.brand !== 'string' || !data.brand.trim() || data.brand.trim().length > 80) fail(400, 'BadRequest');
+            data.brand = data.brand.trim();
+        }
+        if ('defaultTemplate' in data && !CONFIG.templates.includes(data.defaultTemplate)) fail(400, 'BadRequest');
+        if ('theme' in data && !['system', 'light', 'dark'].includes(data.theme)) fail(400, 'BadRequest');
+        for (const [key, max] of [['defaultExpiryHours', 2160], ['retentionDays', 30], ['defaultMaxUses', 1000000]]) {
+            if (!(key in data) || (key === 'defaultMaxUses' && data[key] === null)) continue;
+            if (!Number.isInteger(data[key]) || data[key] < 1 || data[key] > max) fail(400, 'BadRequest');
+        }
+        if ('timezone' in data) {
+            if (typeof data.timezone !== 'string' || !data.timezone || data.timezone.length > 100) fail(400, 'BadRequest');
+            try { new Intl.DateTimeFormat('en', { timeZone: data.timezone }).format(); } catch { fail(400, 'BadRequest'); }
+        }
+        await this.settings.set(data, S.brand);
+        return this.get();
     }
 }

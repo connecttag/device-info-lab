@@ -4,6 +4,8 @@ import worker from '../src/index.js';
 import { createEnv, request } from './helpers.js';
 import { pageQuery } from '../src/utils/validation.js';
 import { SettingsService } from '../src/services/SettingsService.js';
+import { LinkRepository } from '../src/repositories/LinkRepository.js';
+import { VisitRepository } from '../src/repositories/VisitRepository.js';
 
 test('site brand persists, is publicly readable and only authenticated same-origin admins can change it', async () => {
     const env = createEnv();
@@ -48,6 +50,29 @@ test('calendar ranges respect timezone and daylight saving day length', () => {
     assert.equal(riyadh.fromAt, Date.parse('2026-10-23T21:00:00Z'));
     const spring = range('2026-03-08', 'America/New_York'); assert.equal(spring.toAt - spring.fromAt, 23 * 3600000);
     const autumn = range('2026-11-01', 'America/New_York'); assert.equal(autumn.toAt - autumn.fromAt, 25 * 3600000);
+});
+test('atomic admission clamps stale retention to the currently persisted setting', async () => {
+    const env = createEnv();
+    try {
+        const now = Date.now(), settings = new SettingsService(env);
+        await new LinkRepository(env.DB).create({ id: 'l', token: 't', title: 'test', createdAt: now, expiresAt: now + 86400000 });
+        await settings.update({ retentionDays: 1 });
+        await new VisitRepository(env.DB).record({ id: 'v', linkId: 'l', now, retainUntil: now + 30 * 86400000, edge: { isBot: false } });
+        const row = await env.DB.prepare('SELECT retainUntil FROM visits WHERE id = ?').bind('v').first();
+        assert.equal(row.retainUntil, now + 86400000);
+    } finally { env.DB.close(); }
+});
+test('concurrent partial setting changes preserve each independent field', async () => {
+    const env = createEnv();
+    // Queue D1 batches exactly as the production primary serializes writes.
+    const batch = env.DB.batch; let queue = Promise.resolve();
+    env.DB.batch = statements => { const result = queue.then(() => batch(statements)); queue = result.catch(() => {}); return result; };
+    try {
+        const settings = new SettingsService(env);
+        await settings.update({ brand: 'Original', theme: 'light' });
+        await Promise.all([settings.update({ brand: 'Changed' }), settings.update({ theme: 'dark' })]);
+        const data = await settings.get(); assert.equal(data.brand, 'Changed'); assert.equal(data.theme, 'dark');
+    } finally { env.DB.close(); }
 });
 test('key rotation requires current key, invalidates sessions and stores no plaintext key', async () => {
     const env = createEnv();

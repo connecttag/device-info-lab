@@ -10,7 +10,7 @@ import { GroupController } from './controllers/GroupController.js';
 import { SettingsController } from './controllers/SettingsController.js';
 import { SettingsService } from './services/SettingsService.js';
 
-const ADMIN_ASSETS = new Set(['/', '/index.html', '/app.js', '/api.js', '/ui.js', '/strings.js', '/styles.css', '/visit.css', '/link-editor.js', '/analytics.js', '/groups.js', '/settings.js']);
+const ADMIN_ASSETS = new Set(['/', '/index.html', '/app.js', '/api.js', '/ui.js', '/strings.js', '/styles.css', '/visit.css', '/link-editor.js', '/analytics.js', '/groups.js', '/settings.js', '/latest.js']);
 const PUBLIC_ASSETS = new Set(['/visit.js', '/strings.js', '/visit.css']);
 const FONT_ASSETS = new Set(['/fonts.css', '/fonts/Tajawal-Regular.ttf', '/fonts/Tajawal-Medium.ttf', '/fonts/Tajawal-Bold.ttf', '/fonts/OFL.txt', '/icons.js', '/icons-LICENSE.txt']);
 const privateRoutes = new Map([

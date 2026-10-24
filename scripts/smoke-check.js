@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CONFIG } from '../src/config/constants.js';
+import { calendarDate } from '../src/utils/timezone.js';
 
 const config = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
 const local = process.argv.includes('--local');
@@ -71,9 +72,11 @@ try {
     check(branding.status === 200 && typeof (await branding.json()).data.brand === 'string', 'Public branding unavailable');
     const settings = (await (await admin('/api/settings')).json()).data;
     check(settings.retentionDays >= 1 && settings.retentionDays <= 30 && settings.timezone, 'Site settings unavailable');
+    check((await admin('/api/settings', { method: 'PATCH', body: { timezone: 'Invalid/Zone' } })).status === 400, 'Invalid settings accepted');
     const groupResponse = await admin('/api/groups', { method: 'POST', body: { name: `Smoke ${crypto.randomUUID()}` } });
     check(groupResponse.status === 201, 'Group create failed');
     const group = (await groupResponse.json()).data; createdGroups.add(group.id);
+    check((await admin(`/api/groups/${group.id}`, { method: 'PATCH', body: { name: `${group.name} renamed` } })).status === 200, 'Group rename failed');
     const content = { title: 'Deployment verification / tools', template: 'training', expiresInHours: 2, maxUses: 2, groupId: group.id, accentColor: '#1d7d74', backgroundColor: '#eaf5f1' };
     const preview = await admin('/api/preview', { method: 'POST', body: content });
     check(preview.status === 200 && !(await preview.json()).data.html.includes('<script'), 'Preview must remain inert');
@@ -85,6 +88,9 @@ try {
     const cloneResponse = await admin('/api/links', { method: 'POST', body: { ...content, title: `${source.title} copy` } });
     check(cloneResponse.status === 201, 'Copy creation failed'); const clone = (await cloneResponse.json()).data; createdIds.add(clone.id);
     check(clone.token !== link.token && clone.useCount === 0, 'Copy reused token or quota');
+    check((await admin(`/api/links/${clone.id}`, { method: 'PATCH', body: { groupId: null } })).status === 200, 'Move link out of group failed');
+    check((await (await admin(`/api/links?groupId=${group.id}`)).json()).data.total === 1, 'Group link filter mismatch');
+    check((await admin(`/api/links/${clone.id}`, { method: 'PATCH', body: { groupId: group.id } })).status === 200, 'Move link into group failed');
     const qr = await admin(`/api/links/${link.id}/qr`); check(qr.status === 200 && (await qr.text()).includes('<svg'), 'QR failed');
     check((await fetch(link.url, { method: 'HEAD' })).status === 204, 'HEAD should not consume quota');
     await fetch(link.url, { headers: { 'User-Agent': 'TelegramBot (like TwitterBot)' } });
@@ -93,7 +99,8 @@ try {
     const html = await opens.find(response => response.status === 200).text();
     check((await publicWrite('/api/visits/enrich', { capability: html.match(/data-capability="([A-Za-z0-9_.-]+)"/)[1], browser: { language: 'ar' } })).status === 200, 'Final admitted visit cannot enrich');
     check((await publicWrite('/api/training/submit', { capability: html.match(/data-training-capability="([A-Za-z0-9_.-]+)"/)[1], username: CONFIG.demoUsername, password: CONFIG.demoPassword })).status === 200, 'Final admitted visit cannot submit demo');
-    const filter = `groupId=${group.id}&template=training`;
+    const today = calendarDate(Date.now(), settings.timezone);
+    const filter = `groupId=${group.id}&template=training&from=${today}&to=${today}`;
     const stats = (await (await admin(`/api/stats?${filter}`)).json()).data;
     check(stats.totalVisits === 2 && stats.trainingSubmissions === 1, 'Filtered aggregate mismatch');
     check(stats.distributions.template[0].count === 2, 'Distribution mismatch');

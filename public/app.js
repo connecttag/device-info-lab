@@ -5,6 +5,7 @@ import { renderAnalytics } from './analytics.js';
 import { initEditor } from './link-editor.js';
 import { initGroups } from './groups.js';
 import { initSettings, applyBranding } from './settings.js';
+import { latestLoader } from './latest.js';
 
 const $ = selector => document.querySelector(selector);
 document.title = S.brand;
@@ -68,16 +69,18 @@ function chooseView(view) {
     document.querySelectorAll('.sidebar [data-nav]').forEach(node => { node.classList.toggle('selected', node.dataset.nav === state.view); if (node.dataset.nav === state.view) node.setAttribute('aria-current', 'page'); else node.removeAttribute('aria-current'); });
     $('#view-title').textContent = S[state.view]; loadView().catch(onError);
 }
-async function populateLinks() {
+const populateLinks = latestLoader(async () => {
     const options = [Object.assign(el('option', '', S.all), { value: '' })]; let page = 1, data;
     do { data = await api(`/api/links?pageSize=100&page=${page++}`); for (const link of data.items) options.push(Object.assign(el('option', '', link.title), { value: link.id })); } while (options.length - 1 < data.total && data.items.length && page <= 10);
+    return options;
+}, options => {
     if (!options.some(option => option.value === state.filters.linkId)) state.filters.linkId = '';
     $('#visit-link-filter').replaceChildren(...options); $('#visit-link-filter').value = state.filters.linkId || '';
-}
+});
 async function loadView() {
     const generation = ++state.load, view = state.view; $('#boot-status').hidden = false;
     try {
-        await settings.refresh(); await groups.refresh(); await populateLinks();
+        await Promise.all([settings.refresh(), groups.refresh(), populateLinks()]);
         if (generation !== state.load) return;
         const data = await api(`/api/stats?${query(state.filters)}`);
         if (generation !== state.load) return; renderAnalytics(data);

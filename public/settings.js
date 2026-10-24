@@ -1,6 +1,7 @@
 import { S } from './strings.js';
 import { api } from './api.js';
 import { decorate, configureDates } from './ui.js';
+import { latestLoader } from './latest.js';
 export function applyBranding(settings) {
     document.title = settings.brand; document.documentElement.dataset.theme = settings.theme || 'system';
     document.querySelectorAll('.brand').forEach(node => { node.textContent = settings.brand; decorate(node, 'brand'); });
@@ -12,7 +13,7 @@ export function initSettings({ onChanged, onLogout, onError }) {
         $('#filter-context').textContent = `${S.dateHelp} (${data.timezone})`;
         document.querySelector('.footnote').textContent = `${S.retentionPrefix} ${data.retentionDays}. ${S.retentionNote.split('. ').slice(1).join('. ')}`;
     }
-    async function refresh() { apply(await api('/api/settings')); return settings; }
+    const refresh = latestLoader(() => api('/api/settings'), apply);
     $('#settings-open').addEventListener('click', async () => {
         try { await refresh(); for (const [name, value] of Object.entries(settings)) $('#settings-form').elements.namedItem(name).value = value ?? ''; $('#settings-error').textContent = ''; $('#security-error').textContent = ''; $('#rotate-form').reset(); $('#settings-dialog').showModal(); }
         catch (error) { onError(error); }
