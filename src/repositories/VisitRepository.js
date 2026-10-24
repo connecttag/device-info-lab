@@ -1,4 +1,5 @@
 import { BaseRepository } from '../core/base/BaseRepository.js';
+import { visitFilters } from '../utils/visitFilters.js';
 
 function hydrate(row) {
     if (!row) return null;
@@ -7,10 +8,10 @@ function hydrate(row) {
 }
 export class VisitRepository extends BaseRepository {
     async record({ id, linkId, now, retainUntil, edge }) {
-        const result = await this.run(`INSERT INTO visits (id, linkId, createdAt, retainUntil, ip, country, browserName, osName, isBot, edgeJson)
-            SELECT ?, id, ?, ?, ?, ?, ?, ?, ?, ? FROM links WHERE id = ? AND isActive = 1 AND expiresAt > ?`,
+        const result = await this.first(`INSERT INTO visits (id, linkId, createdAt, retainUntil, ip, country, browserName, osName, isBot, edgeJson, template)
+            SELECT ?, id, ?, ?, ?, ?, ?, ?, ?, ?, template FROM links WHERE id = ? AND isActive = 1 AND expiresAt > ? AND (maxUses IS NULL OR useCount < maxUses) RETURNING id`,
         [id, now, retainUntil, edge.ip ?? null, edge.country ?? null, edge.browserName ?? null, edge.osName ?? null, Number(edge.isBot), JSON.stringify(edge), linkId, now]);
-        return result.meta.changes === 1;
+        return Boolean(result);
     }
     async enrich(id, linkId, browser, now) {
         const result = await this.run(`UPDATE visits SET browserJson = ?, enrichedAt = ?
@@ -27,23 +28,24 @@ export class VisitRepository extends BaseRepository {
         return result.meta.changes === 1;
     }
     async findById(id, now) { return hydrate(await this.first('SELECT v.*, l.title AS linkTitle FROM visits v JOIN links l ON l.id = v.linkId WHERE v.id = ? AND v.retainUntil > ?', [id, now])); }
-    async list({ page, pageSize, q = '', linkId = '' }, now) {
-        const terms = ['v.retainUntil > ?'], params = [now];
-        if (linkId) { terms.push('v.linkId = ?'); params.push(linkId); }
-        if (q) {
-            const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
-            terms.push("(v.ip LIKE ? ESCAPE '\\' OR v.country LIKE ? ESCAPE '\\' OR v.browserName LIKE ? ESCAPE '\\' OR v.osName LIKE ? ESCAPE '\\' OR l.title LIKE ? ESCAPE '\\')");
-            params.push(pattern, pattern, pattern, pattern, pattern);
-        }
-        const where = terms.join(' AND ');
+    async list(query, now) {
+        const { page, pageSize } = query;
+        const { where, params } = visitFilters(query, now);
         const count = await this.first(`SELECT COUNT(*) AS total FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where}`, params);
         const items = await this.all(`SELECT v.*, l.title AS linkTitle FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where} ORDER BY v.createdAt DESC, v.id LIMIT ? OFFSET ?`, [...params, pageSize, (page - 1) * pageSize]);
         return { items: items.map(hydrate), total: count.total, page, pageSize };
     }
-    async stats(now) {
+    async stats(now, query = {}) {
         const today = Math.floor(now / 86400000) * 86400000;
-        return this.first(`SELECT (SELECT COUNT(*) FROM links) AS totalLinks,
-            COUNT(*) AS totalVisits, COALESCE(SUM(CASE WHEN createdAt >= ? THEN 1 ELSE 0 END), 0) AS todayVisits
-            FROM visits WHERE retainUntil > ?`, [today, now]);
+        const { where, params } = visitFilters(query, now);
+        const totals = await this.first(`SELECT (SELECT COUNT(*) FROM links) AS totalLinks,
+            COUNT(*) AS totalVisits, COALESCE(SUM(CASE WHEN v.createdAt >= ? AND v.createdAt < ? THEN 1 ELSE 0 END), 0) AS todayVisits,
+            COALESCE(SUM(CASE WHEN v.trainingAt IS NOT NULL THEN 1 ELSE 0 END), 0) AS trainingSubmissions
+            FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where}`, [today, today + 86400000, ...params]);
+        const distributions = {};
+        for (const [key, column] of Object.entries({ template: 'v.template', browser: 'v.browserName', os: 'v.osName', country: 'v.country' })) {
+            distributions[key] = await this.all(`SELECT COALESCE(NULLIF(${column}, ''), 'unknown') AS label, COUNT(*) AS count FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where} GROUP BY label ORDER BY count DESC, label`, params);
+        }
+        return { ...totals, distributions };
     }
 }

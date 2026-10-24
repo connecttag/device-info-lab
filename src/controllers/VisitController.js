@@ -10,7 +10,7 @@ export class VisitController extends BaseController {
     async training(request) { await new TrainingService(this.env).submit(request, await this.body(request)); return this.ok({ saved: true }); }
     async list(request) { return this.ok(await this.visits.list(pageQuery(new URL(request.url)))); }
     async details(id) { return this.ok(await this.visits.details(id)); }
-    async stats() { return this.ok(await this.visits.stats()); }
+    async stats(request) { return this.ok(await this.visits.stats(pageQuery(new URL(request.url)))); }
     async export(request) {
         const result = await this.visits.list(pageQuery(new URL(request.url), true));
         return this.ok({ ...result, truncated: result.total > CONFIG.maxExport, generatedAt: new Date().toISOString() }, 200, { 'Content-Disposition': 'attachment; filename="device-info-visits.json"' });

@@ -24,10 +24,10 @@ export function secure(response, request) {
 export function requireSameOrigin(request) {
     if (request.headers.get('Origin') !== new URL(request.url).origin) fail(403, 'Forbidden');
 }
-export async function parseJson(request) {
+export async function parseJson(request, maxBytes = CONFIG.maxBodyBytes) {
     if (request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') fail(415, 'UnsupportedMediaType');
     const length = Number(request.headers.get('content-length') || 0);
-    if (length > CONFIG.maxBodyBytes) fail(413, 'PayloadTooLarge');
+    if (length > maxBytes) fail(413, 'PayloadTooLarge');
     if (!request.body) fail(400, 'InvalidJson');
     const reader = request.body.getReader();
     const chunks = [];
@@ -37,7 +37,7 @@ export async function parseJson(request) {
             const { value, done } = await reader.read();
             if (done) break;
             size += value.byteLength;
-            if (size > CONFIG.maxBodyBytes) { await reader.cancel(); fail(413, 'PayloadTooLarge'); }
+            if (size > maxBytes) { await reader.cancel(); fail(413, 'PayloadTooLarge'); }
             chunks.push(value);
         }
     } finally { reader.releaseLock(); }
