@@ -19,6 +19,7 @@
     "d1:migrate:remote": "wrangler d1 migrations apply device-info-lab-db --remote"
   },
   "devDependencies": {
+    "lucide-static": "1.61.0",
     "wrangler": "4.152.0"
   },
   "dependencies": {

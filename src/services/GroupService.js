@@ -16,4 +16,5 @@ export class GroupService {
         return group;
     }
     async remove(id) { if (!await this.groups.find(id)) fail(404, 'NotFound'); await this.groups.remove(id); }
+    async purge(id) { if (!await this.groups.find(id)) fail(404, 'NotFound'); await this.groups.purge(id); }
 }

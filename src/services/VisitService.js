@@ -13,7 +13,7 @@ import { SettingsService } from './SettingsService.js';
 export class VisitService extends BaseService {
     constructor(env) { super(env); this.links = new LinkRepository(env.DB); this.visits = new VisitRepository(env.DB); }
     async open(request, token) {
-        const { brand } = await new SettingsService(this.env).get();
+        const { brand, retentionDays } = await new SettingsService(this.env).get();
         if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return unavailablePage(404, brand);
         const link = await this.links.findByToken(token), now = Date.now();
         if (!link) return unavailablePage(404, brand);
@@ -24,7 +24,7 @@ export class VisitService extends BaseService {
         // Known previews are deliberately excluded, even when they do not send Purpose.
         if (edge.isBot) return visitPage(link, edge, '', '', { brand });
         const visitId = crypto.randomUUID();
-        if (!await this.visits.record({ id: visitId, linkId: link.id, now, retainUntil: now + CONFIG.retentionMs, edge })) return unavailablePage(410, brand);
+        if (!await this.visits.record({ id: visitId, linkId: link.id, now, retainUntil: now + retentionDays * 86400000, edge })) return unavailablePage(410, brand);
         const payload = { visitId, linkId: link.id, expiresAt: Math.min(now + CONFIG.capabilityMs, link.expiresAt) };
         const capability = await signCapability(this.env.TOKEN_SECRET, payload);
         const trainingCapability = link.template === 'training' ? await signCapability(this.env.TOKEN_SECRET, payload, 'training') : '';

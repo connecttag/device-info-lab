@@ -1,5 +1,6 @@
 import { BaseRepository } from '../core/base/BaseRepository.js';
 import { visitFilters } from '../utils/visitFilters.js';
+import { dayStart, nextDate, calendarDate } from '../utils/timezone.js';
 
 function hydrate(row) {
     if (!row) return null;
@@ -36,12 +37,13 @@ export class VisitRepository extends BaseRepository {
         return { items: items.map(hydrate), total: count.total, page, pageSize };
     }
     async stats(now, query = {}) {
-        const today = Math.floor(now / 86400000) * 86400000;
+        const timezone = query.timezone || 'UTC', date = calendarDate(now, timezone);
+        const today = dayStart(date, timezone), tomorrow = dayStart(nextDate(date), timezone);
         const { where, params } = visitFilters(query, now);
         const totals = await this.first(`SELECT (SELECT COUNT(*) FROM links) AS totalLinks,
             COUNT(*) AS totalVisits, COALESCE(SUM(CASE WHEN v.createdAt >= ? AND v.createdAt < ? THEN 1 ELSE 0 END), 0) AS todayVisits,
             COALESCE(SUM(CASE WHEN v.trainingAt IS NOT NULL THEN 1 ELSE 0 END), 0) AS trainingSubmissions
-            FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where}`, [today, today + 86400000, ...params]);
+            FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where}`, [today, tomorrow, ...params]);
         const distributions = {};
         for (const [key, column] of Object.entries({ template: 'v.template', browser: 'v.browserName', os: 'v.osName', country: 'v.country' })) {
             distributions[key] = await this.all(`SELECT COALESCE(NULLIF(${column}, ''), 'unknown') AS label, COUNT(*) AS count FROM visits v JOIN links l ON l.id = v.linkId WHERE ${where} GROUP BY label ORDER BY count DESC, label`, params);

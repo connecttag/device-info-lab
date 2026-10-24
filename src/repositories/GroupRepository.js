@@ -5,4 +5,5 @@ export class GroupRepository extends BaseRepository {
     create(id, name, now) { return this.first('INSERT OR IGNORE INTO linkGroups (id, name, createdAt) SELECT ?, ?, ? WHERE (SELECT COUNT(*) FROM linkGroups) < 100 RETURNING *', [id, name, now]); }
     rename(id, name) { return this.first('UPDATE OR IGNORE linkGroups SET name = ? WHERE id = ? RETURNING *', [name, id]); }
     remove(id) { return this.run('DELETE FROM linkGroups WHERE id = ?', [id]); }
+    purge(id) { return this.run('DELETE FROM visits WHERE linkId IN (SELECT id FROM links WHERE groupId = ?)', [id]); }
 }

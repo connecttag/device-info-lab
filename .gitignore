@@ -8,3 +8,4 @@ node_modules/
 coverage/
 worker-configuration.d.ts
 *.log
+.test-results.txt

@@ -9,10 +9,10 @@ import { SettingsService } from '../services/SettingsService.js';
 export class LinkController extends BaseController {
     constructor(env) { super(); this.links = new LinkService(env); this.settings = new SettingsService(env); }
     async list(request, publicOrigin) { return this.ok(await this.links.list(pageQuery(new URL(request.url)), publicOrigin)); }
-    async create(request, publicOrigin) { return this.ok(await this.links.create(validateLink(await parseJson(request, 49152)), publicOrigin), 201); }
+    async create(request, publicOrigin) { return this.ok(await this.links.create(validateLink(await parseJson(request, 49152), false, await this.settings.get()), publicOrigin), 201); }
     async details(id, publicOrigin) { return this.ok(await this.links.details(id, publicOrigin)); }
     async preview(request) {
-        const link = validateLink(await parseJson(request, 49152));
+        const link = validateLink(await parseJson(request, 49152), false, await this.settings.get());
         return this.ok({ html: await visitPage(link, {}, '', '', { preview: true, brand: (await this.settings.get()).brand }).text() });
     }
     async qr(id, publicOrigin) {

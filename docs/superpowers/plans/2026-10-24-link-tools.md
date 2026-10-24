@@ -42,3 +42,5 @@ Interfaces: deployed migration matches Worker; smoke uses isolated temporary rec
 
 ## Ledger
 Pre-flight: Task 1 -> Task 2 share hours/group/theme/filter fields and route response shapes; spec is canonical. Task 1 -> Task 3 share migration and routes; preserve compatibility with existing records and days API. Task 2 -> Task 3 share isolated preview and local assets; verify in actual browser and Worker.
+
+Task 1: complete (e3ee826; 24/24 Node SQLite tests and source check passed). User added settings defaults/timezone/retention/security/theme; implementation integrated with Task 2, additional tests RED then GREEN 27/27. User replaced emoji direction with local SVG; icon regression RED then GREEN, suite 28/28. Browser plugin is absent; existing authorized CUA browser APIs used for real Chrome/IAB QA.

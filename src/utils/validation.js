@@ -1,10 +1,11 @@
 import { CONFIG } from '../config/constants.js';
 import { fail } from './http.js';
+import { dayStart, nextDate } from './timezone.js';
 
 export function onlyKeys(body, allowed) {
     if (Object.keys(body).some(key => !allowed.includes(key))) fail(400, 'BadRequest');
 }
-export function validateLink(body, patch = false) {
+export function validateLink(body, patch = false, defaults = {}) {
     onlyKeys(body, patch ? ['title', 'isActive', 'groupId'] : ['title', 'expiresInDays', 'expiresInHours', 'maxUses', 'groupId', 'template', 'pageTitle', 'pageMessage', 'companyName', 'companyWebsite', 'accentColor', 'backgroundColor', 'logoData']);
     const result = {};
     if (!patch || 'title' in body) {
@@ -13,15 +14,15 @@ export function validateLink(body, patch = false) {
     }
     if (!patch) {
         if ('expiresInHours' in body && 'expiresInDays' in body) fail(400, 'BadRequest');
-        const hours = body.expiresInHours ?? (body.expiresInDays ?? 7) * 24;
+        const hours = body.expiresInHours ?? ('expiresInDays' in body ? body.expiresInDays * 24 : defaults.defaultExpiryHours ?? 168);
         if (!Number.isInteger(hours) || hours < 1 || hours > 2160 || ('expiresInDays' in body && (!Number.isInteger(body.expiresInDays) || body.expiresInDays < 1))) fail(400, 'BadRequest');
         result.expiresInHours = hours;
-        result.maxUses = body.maxUses ?? null;
+        result.maxUses = 'maxUses' in body ? body.maxUses : defaults.defaultMaxUses ?? null;
         if (result.maxUses !== null && (!Number.isInteger(result.maxUses) || result.maxUses < 1 || result.maxUses > 1000000)) fail(400, 'BadRequest');
         result.accentColor = validateColor(body.accentColor ?? '#6956d8');
         result.backgroundColor = validateColor(body.backgroundColor ?? '#f5f6fa');
         result.logoData = validateLogo(body.logoData);
-        result.template = body.template ?? 'welcome';
+        result.template = body.template ?? defaults.defaultTemplate ?? 'welcome';
         if (!CONFIG.templates.includes(result.template)) fail(400, 'BadRequest');
         for (const [field, max] of Object.entries({ pageTitle: 120, pageMessage: 1000, companyName: 120, companyWebsite: 2000 })) {
             if (body[field] !== undefined && (typeof body[field] !== 'string' || body[field].length > max)) fail(400, 'BadRequest');
@@ -89,7 +90,7 @@ export function parseBrowser(body) {
     }
     return result;
 }
-export function pageQuery(url, exportMode = false) {
+export function pageQuery(url, exportMode = false, timezone = 'UTC') {
     const integer = (name, fallback, max) => {
         const raw = url.searchParams.get(name);
         if (raw === null) return fallback;
@@ -102,7 +103,7 @@ export function pageQuery(url, exportMode = false) {
     const linkId = url.searchParams.get('linkId') ?? '';
     const groupId = url.searchParams.get('groupId') ?? '';
     if (q.length > 120 || linkId.length > 100 || groupId.length > 100) fail(400, 'BadRequest');
-    const result = { page: exportMode ? 1 : integer('page', 1, 10000), pageSize: exportMode ? CONFIG.maxExport : integer('pageSize', CONFIG.defaultPageSize, CONFIG.maxPageSize), q, linkId, groupId };
+    const result = { page: exportMode ? 1 : integer('page', 1, 10000), pageSize: exportMode ? CONFIG.maxExport : integer('pageSize', CONFIG.defaultPageSize, CONFIG.maxPageSize), q, linkId, groupId, timezone };
     for (const name of ['template', 'browser', 'os', 'country']) {
         const value = url.searchParams.get(name) || '';
         if (value.length > 100 || (name === 'template' && value && !CONFIG.templates.includes(value)) || (name === 'country' && value && value !== 'unknown' && !/^[A-Z]{2}$/.test(value))) fail(400, 'BadRequest');
@@ -113,7 +114,7 @@ export function pageQuery(url, exportMode = false) {
         if (!value) continue;
         const date = new Date(`${value}T00:00:00.000Z`);
         if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) fail(400, 'BadRequest');
-        result[name === 'from' ? 'fromAt' : 'toAt'] = date.getTime() + (name === 'to' ? 86400000 : 0);
+        result[name === 'from' ? 'fromAt' : 'toAt'] = dayStart(name === 'to' ? nextDate(value) : value, timezone);
     }
     if (result.fromAt !== undefined && result.toAt !== undefined && result.fromAt >= result.toAt) fail(400, 'BadRequest');
     return result;

@@ -16,6 +16,7 @@ export async function safeEqual(a, b) {
     return diff === 0;
 }
 async function key(secret) { return crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']); }
+export async function credentialDigest(secret, value) { return base64url(await crypto.subtle.sign('HMAC', await key(secret), encoder.encode(`admin-key:${value}`))); }
 export async function signCapability(secret, payload, purpose = 'enrich') {
     const body = base64url(encoder.encode(JSON.stringify({ ...payload, purpose })));
     return `${body}.${base64url(await crypto.subtle.sign('HMAC', await key(secret), encoder.encode(body)))}`;

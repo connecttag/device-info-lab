@@ -10,9 +10,9 @@ import { GroupController } from './controllers/GroupController.js';
 import { SettingsController } from './controllers/SettingsController.js';
 import { SettingsService } from './services/SettingsService.js';
 
-const ADMIN_ASSETS = new Set(['/', '/index.html', '/app.js', '/api.js', '/ui.js', '/strings.js', '/styles.css', '/visit.css', '/link-editor.js', '/analytics.js', '/groups.js']);
+const ADMIN_ASSETS = new Set(['/', '/index.html', '/app.js', '/api.js', '/ui.js', '/strings.js', '/styles.css', '/visit.css', '/link-editor.js', '/analytics.js', '/groups.js', '/settings.js']);
 const PUBLIC_ASSETS = new Set(['/visit.js', '/strings.js', '/visit.css']);
-const FONT_ASSETS = new Set(['/fonts.css', '/fonts/Tajawal-Regular.ttf', '/fonts/Tajawal-Medium.ttf', '/fonts/Tajawal-Bold.ttf', '/fonts/OFL.txt']);
+const FONT_ASSETS = new Set(['/fonts.css', '/fonts/Tajawal-Regular.ttf', '/fonts/Tajawal-Medium.ttf', '/fonts/Tajawal-Bold.ttf', '/fonts/OFL.txt', '/icons.js', '/icons-LICENSE.txt']);
 const privateRoutes = new Map([
     ['GET:/api/auth/session', (req, env) => new AuthController(env).session(req)],
     ['POST:/api/auth/logout', (req, env) => new AuthController(env).logout(req)],
@@ -24,6 +24,9 @@ const privateRoutes = new Map([
     ['GET:/api/groups', (req, env) => new GroupController(env).list()],
     ['POST:/api/groups', (req, env) => new GroupController(env).create(req)],
     ['PATCH:/api/settings', (req, env) => new SettingsController(env).update(req)],
+    ['GET:/api/settings', (req, env) => new SettingsController(env).get()],
+    ['POST:/api/auth/rotate-key', async (req, env) => json({ saved: true }, 200, { 'Set-Cookie': await new AuthService(env).rotate(req, await new AuthController(env).body(req)) })],
+    ['POST:/api/auth/revoke-sessions', async (req, env) => json({ saved: true }, 200, { 'Set-Cookie': await new AuthService(env).revoke(req) })],
     ['GET:/api/export', (req, env) => new VisitController(env).export(req)]
 ]);
 const dynamicRoutes = [
@@ -31,6 +34,7 @@ const dynamicRoutes = [
     { method: 'GET', pattern: /^\/api\/links\/([A-Za-z0-9-]{1,100})\/qr$/, handle: (request, env, id, origin) => new LinkController(env).qr(id, origin) },
     { method: 'PATCH', pattern: /^\/api\/groups\/([A-Za-z0-9-]{1,100})$/, handle: (request, env, id) => new GroupController(env).rename(request, id) },
     { method: 'DELETE', pattern: /^\/api\/groups\/([A-Za-z0-9-]{1,100})$/, handle: (request, env, id) => new GroupController(env).remove(id) },
+    { method: 'DELETE', pattern: /^\/api\/groups\/([A-Za-z0-9-]{1,100})\/visits$/, handle: (request, env, id) => new GroupController(env).purge(id) },
     { method: 'PATCH', pattern: /^\/api\/links\/([A-Za-z0-9-]{1,100})$/, handle: (request, env, id, origin) => new LinkController(env).update(request, id, origin) },
     { method: 'DELETE', pattern: /^\/api\/links\/([A-Za-z0-9-]{1,100})$/, handle: (request, env, id) => new LinkController(env).remove(id) },
     { method: 'GET', pattern: /^\/api\/visits\/([A-Za-z0-9-]{1,100})$/, handle: (request, env, id) => new VisitController(env).details(id) }
@@ -40,7 +44,7 @@ export async function route(request, env) {
     const context = origins(request, env);
     if (!context.isAdmin && !context.isPublic) fail(404, 'NotFound');
     if (path === '/theme.css' && method === 'GET') return themeStyles(url);
-    if (path === '/api/branding' && method === 'GET') return new SettingsController(env).get();
+    if (path === '/api/branding' && method === 'GET') return new SettingsController(env).branding();
     if (path === '/api/health' && method === 'GET') return json({ status: 'ok', service: 'device-info-lab', configured: Boolean(env.DB && env.ADMIN_KEY?.length >= 32 && env.TOKEN_SECRET?.length >= 32) });
     if (FONT_ASSETS.has(path) || (context.isAdmin && ADMIN_ASSETS.has(path)) || (context.isPublic && PUBLIC_ASSETS.has(path))) {
         if (!['GET', 'HEAD'].includes(method)) fail(405, 'BadRequest');

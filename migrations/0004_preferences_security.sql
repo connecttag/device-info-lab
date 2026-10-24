@@ -1,0 +1,7 @@
+ALTER TABLE siteSettings ADD COLUMN defaultTemplate TEXT NOT NULL DEFAULT 'deviceInfo';
+ALTER TABLE siteSettings ADD COLUMN defaultExpiryHours INTEGER NOT NULL DEFAULT 168;
+ALTER TABLE siteSettings ADD COLUMN defaultMaxUses INTEGER;
+ALTER TABLE siteSettings ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC';
+ALTER TABLE siteSettings ADD COLUMN retentionDays INTEGER NOT NULL DEFAULT 30;
+ALTER TABLE siteSettings ADD COLUMN theme TEXT NOT NULL DEFAULT 'system';
+CREATE TABLE adminCredentials (id INTEGER PRIMARY KEY CHECK(id = 1), keyDigest TEXT NOT NULL);

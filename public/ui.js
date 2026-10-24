@@ -1,4 +1,5 @@
 import { S } from './strings.js';
+import { ICON_NODES } from './icons.js';
 
 export function el(tag, className = '', text) {
     const element = document.createElement(tag);
@@ -6,22 +7,29 @@ export function el(tag, className = '', text) {
     if (text !== undefined) element.textContent = text;
     return element;
 }
-export function date(value) { return value ? new Intl.DateTimeFormat('ar', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : S.unavailable; }
+let dateFormatter = new Intl.DateTimeFormat('ar', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' });
+export function configureDates(timeZone) { dateFormatter = new Intl.DateTimeFormat('ar', { dateStyle: 'short', timeStyle: 'short', timeZone }); }
+export function date(value) { return value ? dateFormatter.format(new Date(value)) : S.unavailable; }
 export function number(value) { return new Intl.NumberFormat('ar').format(value); }
 export function button(text, action, className = 'small-button') {
     const element = el('button', className, text);
     element.type = 'button';
-    const iconName = ['copy', 'enable', 'disable', 'remove', 'details'].find(key => S[key] === text);
+    const iconName = ['copy', 'enable', 'disable', 'remove', 'details', 'qr', 'duplicate'].find(key => S[key] === text);
     if (iconName) decorate(element, iconName);
     element.addEventListener('click', action);
     return element;
 }
 export function decorate(element, iconName) {
-    const icon = el('span', 'ui-icon', S.icons[iconName]);
-    icon.setAttribute('aria-hidden', 'true'); element.prepend(icon);
+    element.prepend(createIcon(iconName));
+}
+export function createIcon(name) {
+    const ns = 'http://www.w3.org/2000/svg', icon = document.createElementNS(ns, 'svg');
+    for (const [key, value] of Object.entries({ class: 'ui-icon', viewBox: '0 0 24 24', width: '20', height: '20', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', focusable: 'false' })) icon.setAttribute(key, value);
+    for (const [tag, attributes] of ICON_NODES[name] || ICON_NODES.brand) { const shape = document.createElementNS(ns, tag); for (const [key, value] of Object.entries(attributes)) shape.setAttribute(key, value); icon.append(shape); }
+    return icon;
 }
 export function empty(text, kind = 'emptyLinks') {
-    const wrap = el('div', 'empty-state'), icon = el('span', 'empty-icon', S.icons[kind]);
+    const wrap = el('div', 'empty-state'), icon = el('span', 'empty-icon'); icon.append(createIcon(kind));
     icon.setAttribute('aria-hidden', 'true');
     wrap.append(icon, el('strong', '', S[`${kind}Title`]), el('p', 'muted', text));
     return wrap;
@@ -39,12 +47,15 @@ export function linkTable(items, handlers) {
     for (const item of items) {
         const row = el('tr'), name = td(item.title), urlCell = td(), statusCell = td(), actions = td();
         name.append(el('small', 'subtle', S[item.template]));
+        if (item.groupName) name.append(el('small', 'subtle', item.groupName));
         const link = el('a', 'link-url', item.url); link.href = item.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.dir = 'ltr'; urlCell.append(link);
         statusCell.append(el('span', `status ${item.status}`, S[item.status]));
         const controls = el('div', 'row-actions');
-        controls.append(button(S.copy, () => handlers.copy(item.url)), button(item.isActive ? S.disable : S.enable, () => handlers.toggle(item)), button(S.remove, () => handlers.remove(item), 'small-button danger-text'));
+        controls.append(button(S.copy, () => handlers.copy(item.url)), button(S.qr, () => handlers.qr(item)), button(S.duplicate, () => handlers.duplicate(item)), button(S.moveGroup, () => handlers.move(item)), button(item.isActive ? S.disable : S.enable, () => handlers.toggle(item)), button(S.remove, () => handlers.remove(item), 'small-button danger-text'));
         actions.append(controls);
-        row.append(name, urlCell, td(number(item.visitCount ?? 0)), td(date(item.expiresAt), 'nowrap'), statusCell, actions); body.append(row);
+        const count = td(number(item.visitCount ?? 0));
+        count.append(el('small', 'subtle', `${S.uses}: ${number(item.useCount ?? 0)} / ${item.maxUses == null ? S.unlimited : number(item.maxUses)}`));
+        row.append(name, urlCell, count, td(date(item.expiresAt), 'nowrap'), statusCell, actions); body.append(row);
     }
     return wrap;
 }
