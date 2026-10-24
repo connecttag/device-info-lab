@@ -11,10 +11,21 @@ export function number(value) { return new Intl.NumberFormat('ar').format(value)
 export function button(text, action, className = 'small-button') {
     const element = el('button', className, text);
     element.type = 'button';
+    const iconName = ['copy', 'enable', 'disable', 'remove', 'details'].find(key => S[key] === text);
+    if (iconName) decorate(element, iconName);
     element.addEventListener('click', action);
     return element;
 }
-export function empty(text) { return el('p', 'empty', text); }
+export function decorate(element, iconName) {
+    const icon = el('span', 'ui-icon', S.icons[iconName]);
+    icon.setAttribute('aria-hidden', 'true'); element.prepend(icon);
+}
+export function empty(text, kind = 'emptyLinks') {
+    const wrap = el('div', 'empty-state'), icon = el('span', 'empty-icon', S.icons[kind]);
+    icon.setAttribute('aria-hidden', 'true');
+    wrap.append(icon, el('strong', '', S[`${kind}Title`]), el('p', 'muted', text));
+    return wrap;
+}
 function td(text = '', className = '') { return el('td', className, text ?? S.unavailable); }
 function table(headers) {
     const wrap = el('div', 'table-wrap'), table = el('table'), head = el('thead'), tr = el('tr'), body = el('tbody');
@@ -23,7 +34,7 @@ function table(headers) {
     return { wrap, body };
 }
 export function linkTable(items, handlers) {
-    if (!items.length) return empty(S.emptyLinks);
+    if (!items.length) return empty(S.emptyLinks, 'emptyLinks');
     const { wrap, body } = table([S.title, S.link, S.visits, S.expiresAt, S.status, S.actions]);
     for (const item of items) {
         const row = el('tr'), name = td(item.title), urlCell = td(), statusCell = td(), actions = td();
@@ -38,7 +49,7 @@ export function linkTable(items, handlers) {
     return wrap;
 }
 export function visitTable(items, open) {
-    if (!items.length) return empty(S.emptyVisits);
+    if (!items.length) return empty(S.emptyVisits, 'emptyVisits');
     const { wrap, body } = table([S.time, S.linkTitle, S.country, S.browser, S.os, S.ip, S.details]);
     for (const item of items) {
         const row = el('tr'), name = td(item.linkTitle), detail = td(), ip = td(item.ip, 'mono');

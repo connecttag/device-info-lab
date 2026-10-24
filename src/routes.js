@@ -8,6 +8,7 @@ import { landingPage } from './views/visitPage.js';
 
 const ADMIN_ASSETS = new Set(['/', '/index.html', '/app.js', '/api.js', '/ui.js', '/strings.js', '/styles.css']);
 const PUBLIC_ASSETS = new Set(['/visit.js', '/strings.js', '/visit.css']);
+const FONT_ASSETS = new Set(['/fonts.css', '/fonts/Tajawal-Regular.ttf', '/fonts/Tajawal-Medium.ttf', '/fonts/Tajawal-Bold.ttf', '/fonts/OFL.txt']);
 const privateRoutes = new Map([
     ['GET:/api/auth/session', (req, env) => new AuthController(env).session(req)],
     ['POST:/api/auth/logout', (req, env) => new AuthController(env).logout(req)],
@@ -27,7 +28,7 @@ export async function route(request, env) {
     const context = origins(request, env);
     if (!context.isAdmin && !context.isPublic) fail(404, 'NotFound');
     if (path === '/api/health' && method === 'GET') return json({ status: 'ok', service: 'device-info-lab', configured: Boolean(env.DB && env.ADMIN_KEY?.length >= 32 && env.TOKEN_SECRET?.length >= 32) });
-    if ((context.isAdmin && ADMIN_ASSETS.has(path)) || (context.isPublic && PUBLIC_ASSETS.has(path))) {
+    if (FONT_ASSETS.has(path) || (context.isAdmin && ADMIN_ASSETS.has(path)) || (context.isPublic && PUBLIC_ASSETS.has(path))) {
         if (!['GET', 'HEAD'].includes(method)) fail(405, 'BadRequest');
         return env.ASSETS.fetch(request);
     }

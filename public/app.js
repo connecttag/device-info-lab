@@ -1,12 +1,22 @@
 import { S } from './strings.js';
 import { api, query } from './api.js';
-import { el, button, number, linkTable, visitTable, pagination, detailSection } from './ui.js';
+import { el, button, decorate, number, linkTable, visitTable, pagination, detailSection } from './ui.js';
 
 const $ = selector => document.querySelector(selector);
 document.title = S.brand;
 $('#navigation').setAttribute('aria-label', S.navigation);
 $('#visit-link-filter').setAttribute('aria-label', S.link);
 document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = S[node.dataset.i18n]; });
+document.querySelectorAll('.brand').forEach(node => decorate(node, 'brand'));
+document.querySelectorAll('.sidebar [data-nav]').forEach(node => decorate(node, node.dataset.nav));
+document.querySelectorAll('.create-link').forEach(node => decorate(node, 'create'));
+for (const id of ['login', 'logout', 'export']) {
+    const node = id === 'login' ? $('#login-form button') : $(`#${id}`);
+    decorate(node, id);
+}
+document.querySelectorAll('.toolbar button[type="submit"], .toolbar button:not([type])').forEach(node => decorate(node, 'filter'));
+document.querySelectorAll('[data-i18n="latestLinks"]').forEach(node => decorate(node, 'links'));
+document.querySelectorAll('[data-i18n="latestVisits"]').forEach(node => decorate(node, 'visits'));
 document.querySelectorAll('[data-placeholder]').forEach(node => { node.placeholder = S[node.dataset.placeholder]; if (!node.closest('label')) node.setAttribute('aria-label', node.placeholder); });
 const templates = ['deviceInfo', 'welcome', 'promotional', 'notFound', 'training', 'custom'];
 for (const template of templates) { const option = el('option', '', S[template]); option.value = template; $('#template-select').append(option); }
@@ -49,7 +59,10 @@ function chooseView(view) {
 async function refreshStats() {
     const data = await api('/api/stats');
     $('#stats').replaceChildren(...['totalLinks', 'totalVisits', 'todayVisits'].map(key => {
-        const block = el('div', 'stat'); block.append(el('span', '', S[key]), el('strong', '', number(data[key]))); return block;
+        const block = el('div', `stat stat-${key}`), copy = el('div', 'stat-copy'), icon = el('span', 'stat-icon', S.icons[key]);
+        icon.setAttribute('aria-hidden', 'true');
+        copy.append(el('span', 'stat-label', S[key]), el('strong', '', number(data[key])), el('small', 'stat-hint', S.statsHints[key]));
+        block.append(copy, icon); return block;
     }));
 }
 async function loadView() {

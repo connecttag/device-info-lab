@@ -21,4 +21,9 @@ function visit(folder) {
 for (const folder of ['src', 'public', 'tests', 'scripts']) visit(join(root, folder));
 JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 JSON.parse(readFileSync(join(root, 'wrangler.jsonc'), 'utf8'));
+for (const sheet of ['styles.css', 'visit.css', 'fonts.css']) {
+    for (const match of readFileSync(join(root, 'public', sheet), 'utf8').matchAll(/url\(["']?(\/[^"')]+)["']?\)/g)) {
+        if (!existsSync(join(root, 'public', match[1].slice(1)))) throw new Error(`Missing stylesheet asset: ${match[1]}`);
+    }
+}
 console.log(`Source syntax, local imports and JSON checked: ${count} JavaScript files.`);

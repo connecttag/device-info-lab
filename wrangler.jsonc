@@ -15,7 +15,7 @@
   "d1_databases": [{
     "binding": "DB",
     "database_name": "device-info-lab-db",
-      "database_id": "6b82e6c9-eaac-418a-9939-5372ab4a2989",
+    "database_id": "6b82e6c9-eaac-418a-9939-5372ab4a2989",
     "migrations_dir": "migrations"
   }],
   "vars": {

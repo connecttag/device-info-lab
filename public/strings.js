@@ -1,6 +1,14 @@
 // Shared copy: server, dashboard and visitor page all import this resource.
 export const S = Object.freeze({
     brand: 'مريم لينك', navigation: 'التنقل',
+    icons: {
+        brand: '🔗', overview: '📊', links: '🔗', visits: '👥', create: '➕', logout: '🚪',
+        copy: '📋', enable: '▶️', disable: '⏸️', remove: '🗑️', details: '🔍', export: '📥', filter: '🔎',
+        totalLinks: '🔗', totalVisits: '👣', todayVisits: '🗓️', emptyLinks: '🔗', emptyVisits: '👀', login: '🔐'
+    },
+    statsHints: { totalLinks: 'روابط أنشأتها للتجربة', totalVisits: 'سجلات ضمن مدة الاحتفاظ', todayVisits: 'الزيارات المسجلة منذ منتصف الليل' },
+    templateIcons: { welcome: '👋', deviceInfo: '📱', promotional: '🏢', notFound: '🔎', training: '🧪', custom: '✨' },
+    emptyLinksTitle: 'ابدأ برابطك الأول', emptyVisitsTitle: 'الزيارات ستظهر هنا',
     overview: 'نظرة عامة', links: 'الروابط', visits: 'الزيارات',
     subtitle: 'إدارة الروابط ومراجعة معلومات الزيارات في مكان واحد.',
     loginTitle: 'الدخول إلى لوحة التحكم', loginHelp: 'أدخل مفتاح المسؤول الذي ضبطته للخدمة.',
