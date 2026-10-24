@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "device-info-lab",
+  "account_id": "7be93e8acc0d7660d511b43474c85b8e",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "info.aslyemen.com", "custom_domain": true },
+    { "pattern": "devics-panel.aslyemen.com", "custom_domain": true }
+  ],
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "device-info-lab-db",
+      "database_id": "6b82e6c9-eaac-418a-9939-5372ab4a2989",
+    "migrations_dir": "migrations"
+  }],
+  "vars": {
+    "APP_ENV": "production",
+    "PUBLIC_ORIGIN": "https://info.aslyemen.com",
+    "ADMIN_ORIGIN": "https://devics-panel.aslyemen.com"
+  },
+  "triggers": { "crons": ["17 3 * * *"] },
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } }
+}

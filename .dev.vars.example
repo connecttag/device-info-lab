@@ -1,0 +1,5 @@
+# Copy to .dev.vars and replace both values with different random values (32+ characters).
+APP_ENV="development"
+LOCAL_ORIGIN="http://127.0.0.1:8787"
+ADMIN_KEY=""
+TOKEN_SECRET=""

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><title></title>
+  <link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
+</head>
+<body>
+  <section id="login-view" class="login-wrap" hidden>
+    <div class="login-card"><div class="brand" data-i18n="brand"></div><h1 data-i18n="loginTitle"></h1><p class="muted" data-i18n="loginHelp"></p>
+      <form id="login-form"><label><span data-i18n="adminKey"></span><input name="adminKey" type="password" required autocomplete="current-password" dir="ltr" maxlength="512"></label><button type="submit" class="primary" data-i18n="login"></button><p id="login-error" class="error" role="alert"></p></form>
+    </div>
+  </section>
+  <div id="app-view" class="app-shell" hidden>
+    <aside class="sidebar"><a href="#overview" class="brand" data-i18n="brand"></a><nav id="navigation"><button data-nav="overview" data-i18n="overview"></button><button data-nav="links" data-i18n="links"></button><button data-nav="visits" data-i18n="visits"></button></nav><button id="logout" class="logout" data-i18n="logout"></button></aside>
+    <main class="workspace">
+      <header class="page-header"><div><h1 id="view-title"></h1><p class="muted" data-i18n="subtitle"></p></div><button class="primary create-link" data-i18n="create"></button></header>
+      <div id="stats" class="stats" aria-live="polite"></div>
+      <section id="overview-view" class="view"><section class="panel"><div class="section-heading"><h2 data-i18n="latestLinks"></h2><button class="text-button" data-nav="links" data-i18n="allLinks"></button></div><div id="recent-links"></div></section><section class="panel"><div class="section-heading"><h2 data-i18n="latestVisits"></h2><button class="text-button" data-nav="visits" data-i18n="allVisits"></button></div><div id="recent-visits"></div></section></section>
+      <section id="links-view" class="view" hidden><section class="panel"><form id="link-filter" class="toolbar"><input name="q" type="search" data-placeholder="search" maxlength="120"><button class="secondary" data-i18n="filter"></button></form><div id="links-table"></div><div id="links-pagination" class="pagination"></div></section></section>
+      <section id="visits-view" class="view" hidden><section class="panel"><form id="visit-filter" class="toolbar"><input name="q" type="search" data-placeholder="search" maxlength="120"><select name="linkId" id="visit-link-filter"></select><button class="secondary" data-i18n="filter"></button><button type="button" id="export" class="secondary" data-i18n="export"></button></form><div id="visits-table"></div><div id="visits-pagination" class="pagination"></div><p class="caption" data-i18n="exportNote"></p></section></section>
+      <p class="footnote" data-i18n="retentionNote"></p>
+    </main>
+  </div>
+  <div id="boot-status" class="boot-status" role="status" data-i18n="loading"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="create-dialog"><form id="create-form"><div class="dialog-heading"><h2 data-i18n="create"></h2><button type="button" class="text-button close-dialog" data-i18n="close"></button></div><label><span data-i18n="linkTitle"></span><input name="title" required maxlength="120" data-placeholder="titlePlaceholder"></label><div class="form-grid"><label><span data-i18n="expiryDays"></span><input name="expiresInDays" type="number" value="7" required min="1" max="90"></label><label><span data-i18n="template"></span><select name="template" id="template-select"></select></label></div><label><span data-i18n="pageTitle"></span><input name="pageTitle" maxlength="120"></label><label><span data-i18n="pageMessage"></span><textarea name="pageMessage" rows="3" maxlength="1000"></textarea></label><div id="company-fields" hidden><label><span data-i18n="companyName"></span><input name="companyName" maxlength="120"></label><label><span data-i18n="companyWebsite"></span><input name="companyWebsite" type="url" maxlength="2000" dir="ltr"></label></div><p class="caption" data-i18n="contentHelp"></p><p id="create-error" class="error" role="alert"></p><footer class="dialog-actions"><button class="primary" data-i18n="save"></button><button type="button" class="secondary close-dialog" data-i18n="cancel"></button></footer></form></dialog>
+  <dialog id="details-dialog"><div class="dialog-heading"><h2 id="detail-title" data-i18n="visitDetails"></h2><button type="button" class="text-button close-dialog" data-i18n="close"></button></div><div id="detail-content"></div></dialog>
+  <dialog id="delete-dialog"><form id="delete-form"><h2 data-i18n="removeTitle"></h2><p class="muted" data-i18n="removeHelp"></p><footer class="dialog-actions"><button class="danger" data-i18n="remove"></button><button type="button" class="secondary close-dialog" data-i18n="cancel"></button></footer></form></dialog>
+</body></html>

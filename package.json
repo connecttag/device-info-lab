@@ -1,0 +1,24 @@
+{
+  "name": "device-info-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent educational visit metadata Worker and Arabic dashboard",
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local --host 127.0.0.1 --ip 127.0.0.1 --port 8787",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types",
+    "test": "node --experimental-sqlite --test tests/*.test.js",
+    "check": "node scripts/check-source.js",
+    "smoke": "node scripts/smoke-check.js",
+    "d1:create": "wrangler d1 create device-info-lab-db",
+    "d1:migrate:local": "wrangler d1 migrations apply device-info-lab-db --local",
+    "d1:migrate:remote": "wrangler d1 migrations apply device-info-lab-db --remote"
+  },
+  "devDependencies": {
+    "wrangler": "4.152.0"
+  }
+}
