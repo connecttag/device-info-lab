@@ -1,6 +1,6 @@
 // Shared copy: server, dashboard and visitor page all import this resource.
 export const S = Object.freeze({
-    brand: 'مريم لينك', navigation: 'التنقل',
+    brand: 'كونكت لينك', navigation: 'التنقل',
     statsHints: { totalLinks: 'كل الروابط في الحساب', totalVisits: 'ضمن الفلاتر ومدة الاحتفاظ', todayVisits: 'ضمن الفلاتر منذ منتصف الليل', trainingSubmissions: 'نماذج التدريب المحفوظة ضمن الفلاتر' },
     settings: 'إعدادات الموقع', siteName: 'اسم الموقع', appearance: 'المظهر', light: 'فاتح', dark: 'داكن', system: 'حسب الجهاز',
     timezone: 'المنطقة الزمنية', timezoneHelp: 'تُفسّر الفترات ويُعرض الوقت بحسب هذه المنطقة، مثل Asia/Riyadh.',

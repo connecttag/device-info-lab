@@ -4,8 +4,8 @@ JSON keys use camelCase. Responses are `{ "success": true, "data": ... }` or `{ 
 
 ## Origins and authentication
 
-- Administration: `https://devics-panel.aslyemen.com`.
-- Public visits: `https://info.aslyemen.com`.
+- Administration: `https://panel.connecttg.net`.
+- Public visits: `https://connecttg.net`.
 - Local development: both use `http://127.0.0.1:8787`.
 - Administrative writes require `Origin` exactly equal to the administration origin. Login returns a host-only HttpOnly session cookie. Send subsequent requests with that cookie. No API key in query strings and no CORS wildcard.
 - JSON body maximum: 8192 bytes; authenticated link creation and preview allow 49152 bytes to accommodate an embedded raster logo. Both declared and actual streamed sizes are bounded.

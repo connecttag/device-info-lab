@@ -8,8 +8,8 @@
   "workers_dev": false,
   "preview_urls": false,
   "routes": [
-    { "pattern": "info.aslyemen.com", "custom_domain": true },
-    { "pattern": "devics-panel.aslyemen.com", "custom_domain": true }
+    { "pattern": "connecttg.net", "custom_domain": true },
+    { "pattern": "panel.connecttg.net", "custom_domain": true }
   ],
   "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
   "d1_databases": [{
@@ -20,8 +20,8 @@
   }],
   "vars": {
     "APP_ENV": "production",
-    "PUBLIC_ORIGIN": "https://info.aslyemen.com",
-    "ADMIN_ORIGIN": "https://devics-panel.aslyemen.com"
+    "PUBLIC_ORIGIN": "https://connecttg.net",
+    "ADMIN_ORIGIN": "https://panel.connecttg.net"
   },
   "triggers": { "crons": ["17 3 * * *"] },
   "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } }

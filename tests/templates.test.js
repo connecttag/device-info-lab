@@ -25,14 +25,14 @@ test('all six templates record visits including real 404; custom HTML remains es
 });
 test('public host cannot serve administration routes or assets and admin host cannot record visits', async () => {
     const env = createEnv();
-    Object.assign(env, { APP_ENV: 'production', PUBLIC_ORIGIN: 'https://info.aslyemen.com', ADMIN_ORIGIN: 'https://devics-panel.aslyemen.com' });
+    Object.assign(env, { APP_ENV: 'production', PUBLIC_ORIGIN: 'https://connecttg.net', ADMIN_ORIGIN: 'https://panel.connecttg.net' });
     try {
         for (const path of ['/api/links', '/api/visits', '/api/auth/session', '/index.html', '/app.js']) {
-            assert.equal((await worker.fetch(new Request(`https://info.aslyemen.com${path}`), env)).status, 404);
+            assert.equal((await worker.fetch(new Request(`https://connecttg.net${path}`), env)).status, 404);
         }
-        assert.equal((await worker.fetch(new Request('https://devics-panel.aslyemen.com/v/abc'), env)).status, 404);
+        assert.equal((await worker.fetch(new Request('https://panel.connecttg.net/v/abc'), env)).status, 404);
         assert.equal((await worker.fetch(new Request('https://unknown.example/api/health'), env)).status, 404);
-        assert.equal((await worker.fetch(new Request('https://devics-panel.aslyemen.com/api/links'), env)).status, 401);
+        assert.equal((await worker.fetch(new Request('https://panel.connecttg.net/api/links'), env)).status, 401);
     } finally { env.DB.close(); }
 });
 test('credential headers are removed and referrer query/fragment never persist', () => {

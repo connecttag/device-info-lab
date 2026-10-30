@@ -1,10 +1,12 @@
-# Device Info Lab — مريم لينك
+# Device Info Lab — كونكت لينك
 
-مشروع مستقل مبني بـ **Cloudflare Workers + D1 + Static Assets**، بلوحة تحكم عربية تدعم RTL. اسم المجلد والـWorker هو `device-info-lab`، وقاعدة البيانات `device-info-lab-db`؛ **مريم لينك** هو اسم الواجهة فقط.
+مشروع مستقل مبني بـ **Cloudflare Workers + D1 + Static Assets**، بلوحة تحكم عربية تدعم RTL. اسم المجلد والـWorker هو `device-info-lab`، وقاعدة البيانات `device-info-lab-db`؛ **كونكت لينك** هو اسم الواجهة فقط.
 
-- روابط الزيارة: **https://info.aslyemen.com**
-- الإدارة: **https://devics-panel.aslyemen.com** (هذه هي التهجئة المعتمدة)
+- روابط الزيارة: **https://connecttg.net**
+- الإدارة: **https://panel.connecttg.net**
 - المستودع: https://github.com/connecttag/device-info-lab
+
+اعتُمد الاسم والنطاقان الجديدان في 2026-10-30. للروابط المنشورة سابقًا، استبدل `https://info.aslyemen.com` بـ`https://connecttg.net` مع إبقاء مسار `/v/...` كما هو؛ رموز الروابط وبياناتها في القاعدة نفسها.
 
 ## ما الذي يقدمه؟
 

@@ -1,5 +1,13 @@
 # Implementation ledger
 
+## Connect Link branding and domains (2026-10-30)
+
+Supersedes the historical branding and host decisions below: the user selected كونكت لينك, with https://connecttg.net for public visits and https://panel.connecttg.net for administration. Worker and database identifiers remain device-info-lab and device-info-lab-db. Migration 0005_connect_link_brand.sql changes only the persisted display name, preserving all other settings.
+
+Validation: 32/32 tests, 59-file source/import/resource checks, and Wrangler deployment dry run passed. An isolated SQLite upgrade preserved all existing preferences while changing the brand. Migration 0005 was applied remotely; no pending migrations remain. Worker version 187bea34-e2cf-4fc5-a521-ea57e361cd75 was deployed, and the Cloudflare API confirmed exactly the two new custom domains for this Worker.
+
+Production verification: public DNS resolvers 8.8.8.8 and 1.1.1.1 returned the new domain addresses. Nine HTTPS checks passed using those addresses with normal certificate verification: both roots, both branding endpoints (كونكت لينك), configured health, and public/admin route isolation. The machine's default DNS resolver still cached the earlier missing records, so browser navigation on this machine could not yet resolve the hosts. No production administrator credentials or visitor records were used for validation. Previously shared visit tokens remain valid under the new public origin; old host bindings were replaced.
+
 Plan: docs/superpowers/plans/2026-10-24-device-info-lab.md
 
 Ruling: Continue implementation inline after the user's explicit instruction قم بالتنفيذ; do not request another planning approval.
